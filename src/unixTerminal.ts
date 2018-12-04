@@ -4,6 +4,7 @@
  * Copyright (c) 2018, Microsoft Corporation (MIT License).
  */
 import * as net from 'net';
+import * as os from 'os';
 import { Terminal, DEFAULT_COLS, DEFAULT_ROWS } from './terminal';
 import { IProcessEnv, IPtyForkOptions, IPtyOpenOptions } from './interfaces';
 import { ArgvOrCommandLine } from './types';
@@ -20,6 +21,21 @@ try {
     // Re-throw the exception from the Release require if the Debug require fails as well
     throw outerError;
   }
+}
+
+/**
+ * Return the error name associated to a given errno on the given platform.
+ *
+ * @param errno The errno.
+ * @return The string representation of `errno` (e.g. `'ENOENT'`).
+ */
+function errnoToString(errno: number): string {
+  for (const errname in os.constants.errno) {
+    if ((os.constants.errno as any)[errname] === errno) {
+      return errname;
+    }
+  }
+  return errno.toString();
 }
 
 const DEFAULT_FILE = 'sh';
@@ -104,6 +120,14 @@ export class UnixTerminal extends Terminal {
 
     // fork
     const term = pty.fork(file, args, parsedEnv, cwd, this._cols, this._rows, uid, gid, (encoding === 'utf8'), onexit);
+
+    process.nextTick(() => {
+      if (term._exec_errno === 0) {
+        this.emit('exec', undefined);
+      } else {
+        this.emit('exec', errnoToString(term._exec_errno));
+      }
+    });
 
     this._socket = new PipeSocket(term.fd);
     if (encoding !== null) {

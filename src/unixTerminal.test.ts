@@ -239,5 +239,31 @@ if (process.platform !== 'win32') {
         });
       });
     });
+
+    describe('exec event', function() {
+      it('should fire an exec event on success', function(done) {
+        const term = new UnixTerminal('/bin/ls');
+        term.on('exec', (reason: string | undefined) => {
+          assert.strictEqual(reason, undefined);
+          done();
+        });
+      });
+
+      it('should fire an exec event on ENOENT failure', function(done) {
+        const term = new UnixTerminal('/this/path/does/not/exist');
+        term.on('exec', (reason: string | undefined) => {
+          assert.strictEqual(reason, 'ENOENT');
+          done();
+        });
+      });
+
+      it('should fire an exec event on EACCES failure', function(done) {
+        const term = new UnixTerminal('/bin');
+        term.on('exec', (reason: string | undefined) => {
+          assert.strictEqual(reason, 'EACCES');
+          done();
+        });
+      });
+    });
   });
 }

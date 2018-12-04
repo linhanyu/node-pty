@@ -45,6 +45,8 @@ interface IUnixProcess {
   fd: number;
   pid: number;
   pty: string;
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  _exec_errno: number;
 }
 
 interface IUnixOpenProcess {
