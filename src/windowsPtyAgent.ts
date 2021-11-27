@@ -146,6 +146,16 @@ export class WindowsPtyAgent {
     // The conout socket must be ready out on another thread to avoid deadlocks
     this._conoutSocketWorker = new ConoutConnection(term.conout);
     this._conoutSocketWorker.onReady(() => {
+      if (this._useConpty) {
+        const connect = (this._ptyNative as IConptyNative).connect(
+          this._pty,
+          commandLine,
+          cwd,
+          env,
+          (c) => this._$onProcessExit(c)
+        );
+        this._innerPid = connect.pid;
+      }
       this._conoutSocketWorker.connectSocket(this._outSocket);
     });
     this._outSocket.on("connect", () => {
@@ -165,16 +175,7 @@ export class WindowsPtyAgent {
       this._inSocket.setEncoding("utf8");
     });
 
-    if (this._useConpty) {
-      const connect = (this._ptyNative as IConptyNative).connect(
-        this._pty,
-        commandLine,
-        cwd,
-        env,
-        (c) => this._$onProcessExit(c)
-      );
-      this._innerPid = connect.pid;
-    }
+    
   }
 
   public resize(cols: number, rows: number): void {
