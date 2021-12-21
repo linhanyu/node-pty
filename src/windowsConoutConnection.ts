@@ -2,12 +2,12 @@
  * Copyright (c) 2020, Microsoft Corporation (MIT License).
  */
 
-import { Worker } from 'worker_threads';
-import { Socket } from 'net';
-import { IDisposable } from './types';
-import { IWorkerData, ConoutWorkerMessage, getWorkerPipeName } from './shared/conout';
-import { join } from 'path';
-import { IEvent, EventEmitter2 } from './eventEmitter2';
+import { Worker } from "worker_threads";
+import { Socket } from "net";
+import { IDisposable } from "./types";
+import { IWorkerData, ConoutWorkerMessage, getWorkerPipeName } from "./shared/conout";
+import { join } from "path";
+import { IEvent, EventEmitter2 } from "./eventEmitter2";
 
 /**
  * The amount of time to wait for additional data after the conpty shell process has exited before
@@ -34,21 +34,23 @@ export class ConoutConnection implements IDisposable {
   private _isDisposed: boolean = false;
 
   private _onReady = new EventEmitter2<void>();
-  public get onReady(): IEvent<void> { return this._onReady.event; }
+  public get onReady(): IEvent<void> {
+    return this._onReady.event;
+  }
 
-  constructor(
-    private _conoutPipeName: string
-  ) {
+  constructor(private _conoutPipeName: string) {
     const workerData: IWorkerData = { conoutPipeName: _conoutPipeName };
-    const scriptPath = __dirname.replace('node_modules.asar', 'node_modules.asar.unpacked');
-    this._worker = new Worker(join(scriptPath, 'worker/conoutSocketWorker.js'), { workerData });
-    this._worker.on('message', (message: ConoutWorkerMessage) => {
+    const scriptPath = __dirname
+      .replace("node_modules.asar", "node_modules.asar.unpacked")
+      .replace("app.asar", "app.asar.unpacked");
+    this._worker = new Worker(join(scriptPath, "worker/conoutSocketWorker.js"), { workerData });
+    this._worker.on("message", (message: ConoutWorkerMessage) => {
       switch (message) {
         case ConoutWorkerMessage.READY:
           this._onReady.fire();
           return;
         default:
-          console.warn('Unexpected ConoutWorkerMessage', message);
+          console.warn("Unexpected ConoutWorkerMessage", message);
       }
     });
   }
